@@ -32,4 +32,22 @@ The token is embedded into this private prototype firmware image. It is never pr
 
 ## Current TLS limitation
 
-The proof uses `reqwless::client::TlsVerify::None`. Traffic is encrypted, but the server certificate is not verified in this first proof. Certificate verification is a required hardening step before treating the network path as complete.
+The proof uses `reqwless::client::TlsVerify::None`. Traffic is encrypted, but the server certificate is not verified in this first proof.
+
+A first certificate-verification attempt used `embedded-tls` with a pinned CA certificate. The firmware built and flashed, but the board stalled during the TLS handshake before producing a response. That attempt was not accepted as verification.
+
+The next attempt should switch reqwless to its `mbedtls-rs` backend. This is the Espressif-oriented path and supports hardware-oriented TLS handling. It must be built, flashed, and confirmed by serial output before this document can claim verified TLS.
+
+## UsageSnapshot checkpoint
+
+The approved boundary is:
+
+```text
+UsageSnapshot {
+  remaining_percent
+  reset_at
+  status: fresh | stale | unavailable
+}
+```
+
+The existing board proof only exposes the raw weekly `used_percent`. Converting it to `remaining_percent` and preserving stale values is still pending on-device verification. No token or full API response may be printed.
