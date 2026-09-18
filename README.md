@@ -8,7 +8,7 @@ The first goal is understanding and design. We will not start by writing device 
 
 The connected board is a **Heltec WiFi LoRa 32 V3.2**. It is exposed as `/dev/ttyUSB0` through a Silicon Labs CP2102 USB-to-UART bridge.
 
-The exact radio variant (`HTIT-WB32LA` or `HTIT-WB32LAF`) still matters because the versions can use different LoRa frequency bands. We will confirm that before selecting radio settings.
+The board variant is **HTIT-WB32LAF**. We will use the matching LoRa frequency settings from the official V3.2 documentation.
 
 Main parts of the V3 board:
 
