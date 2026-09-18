@@ -6,9 +6,9 @@ The first goal is understanding and design. We will not start by writing device 
 
 ## Device
 
-The connected board is currently exposed as `/dev/ttyUSB0` through a Silicon Labs CP2102 USB-to-UART bridge. This confirms a serial connection, but USB does not reveal the exact Heltec model or PCB revision by itself.
+The connected board is a **Heltec WiFi LoRa 32 V3.2**. It is exposed as `/dev/ttyUSB0` through a Silicon Labs CP2102 USB-to-UART bridge.
 
-The board is believed to be a **Heltec HTIT-WB32LA / HTIT-WB32LAF, WiFi LoRa 32 V3**. We must confirm the exact model and hardware revision from the board label or an ESP32 chip probe before selecting pins, radio settings, or a Rust target. The `LA` and `LAF` versions can use different LoRa frequency bands.
+The exact radio variant (`HTIT-WB32LA` or `HTIT-WB32LAF`) still matters because the versions can use different LoRa frequency bands. We will confirm that before selecting radio settings.
 
 Main parts of the V3 board:
 
