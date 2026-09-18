@@ -15,10 +15,22 @@ set -a
 source "$ENV_FILE"
 set +a
 
-if [[ -z "${CHATGPT_ACCESS_TOKEN:-}" || -z "${CHATGPT_ACCOUNT_ID:-}" ]]; then
-  echo "CHATGPT_ACCESS_TOKEN and CHATGPT_ACCOUNT_ID must both be set in $ENV_FILE." >&2
+if [[ -z "${WIFI_SSID:-}" || -z "${WIFI_PASSWORD:-}" ]]; then
+  echo "WIFI_SSID and WIFI_PASSWORD must both be set in $ENV_FILE." >&2
   exit 1
 fi
 
+# Load the host Cargo installation before selecting the ESP32 toolchain.
+if [[ -f "$HOME/.cargo/env" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.cargo/env"
+fi
+
+# espup installs the ESP32 toolchain environment separately from the host Rust toolchain.
+if [[ -f "$HOME/export-esp.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/export-esp.sh"
+fi
+
 cd "$ROOT_DIR"
-exec cargo build --target "$TARGET"
+exec cargo +esp build --target "$TARGET"

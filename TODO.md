@@ -36,7 +36,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Build and flash a minimal firmware image.
   - [x] Build the minimal `no_std` firmware for the ESP32-S3 target.
   - [x] Flash it to the board.
-- [ ] Connect the board to Wi-Fi.
+- [x] Connect the board to Wi-Fi.
 - [ ] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time.
 - [ ] Send an HTTPS GET request to `/backend-api/wham/usage`.
 - [ ] Parse the weekly usage window.
