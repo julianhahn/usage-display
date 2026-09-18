@@ -1,5 +1,7 @@
 # Heltec V3.2 display hardware
 
+Source index: [Project sources](../sources.md)
+
 ## Evidence checked
 
 - [HTIT-WB32LA V3.2 datasheet](https://s.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf)
