@@ -4,6 +4,7 @@
 use core::panic::PanicInfo;
 
 use embassy_executor::Spawner;
+use embassy_net::{Config as NetConfig, Runner, StackResources};
 use embassy_time::{Duration, Timer};
 use esp_hal::{clock::CpuClock, timer::timg::TimerGroup};
 use esp_radio::wifi::{
@@ -11,11 +12,14 @@ use esp_radio::wifi::{
     sta::StationConfig,
 };
 use esp_println::println;
+use static_cell::StaticCell;
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
 const WIFI_SSID: &str = env!("WIFI_SSID");
 const WIFI_PASSWORD: &str = env!("WIFI_PASSWORD");
+
+static NET_RESOURCES: StaticCell<StackResources<3>> = StaticCell::new();
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -41,7 +45,7 @@ async fn main(spawner: Spawner) -> ! {
     );
 
     println!("usage-display: starting Wi-Fi");
-    let _wifi_interface = Interface::station();
+    let wifi_interface = Interface::station();
     let controller = WifiController::new(
         peripherals.WIFI,
         ControllerConfig::default().with_initial_config(station_config),
@@ -49,11 +53,31 @@ async fn main(spawner: Spawner) -> ! {
     .unwrap();
     println!("usage-display: Wi-Fi configured");
 
+    let (stack, runner) = embassy_net::new(
+        wifi_interface,
+        NetConfig::dhcpv4(Default::default()),
+        NET_RESOURCES.init(StackResources::new()),
+        0x5eed_2026,
+    );
+
     spawner.spawn(connection(controller).unwrap());
+    spawner.spawn(net_task(runner).unwrap());
+
+    stack.wait_config_up().await;
+    if let Some(config) = stack.config_v4() {
+        println!("usage-display: DHCP acquired IPv4 config: {:?}", config);
+    } else {
+        println!("usage-display: DHCP finished without IPv4 config");
+    }
 
     loop {
         Timer::after(Duration::from_secs(60)).await;
     }
+}
+
+#[embassy_executor::task]
+async fn net_task(mut runner: Runner<'static, Interface>) {
+    runner.run().await;
 }
 
 #[embassy_executor::task]

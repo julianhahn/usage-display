@@ -37,6 +37,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
   - [x] Build the minimal `no_std` firmware for the ESP32-S3 target.
   - [x] Flash it to the board.
 - [x] Connect the board to Wi-Fi.
+- [x] Run Embassy Net with DHCPv4 and print the acquired IPv4 configuration over serial.
 - [ ] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time.
 - [ ] Send an HTTPS GET request to `/backend-api/wham/usage`.
 - [ ] Parse the weekly usage window.
@@ -59,7 +60,7 @@ The resulting firmware contains the test token. This is acceptable for the priva
 
 ## Latest hardware proof
 
-The minimal firmware flashed successfully to `/dev/ttyUSB0` with `espflash`. The probe identified an ESP32-S3 revision v0.2 with 8 MB flash.
+The minimal firmware flashed successfully to `/dev/ttyUSB0` with the project-local `espflash 4.4.0` path and the checked-in ESP-IDF 5.5.1 bootloader. The probe identified an ESP32-S3 revision v0.2 with 8 MB flash. The Wi-Fi firmware acquired IPv4 `192.168.178.70/24` by DHCP.
 
 ## Fallback
 
