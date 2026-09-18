@@ -57,6 +57,14 @@ CHATGPT_ACCESS_TOKEN=... CHATGPT_ACCOUNT_ID=... cargo build
 
 The resulting firmware contains the test token. This is acceptable for the private home prototype. The token must be revoked after a test if needed.
 
+## Current blocker
+
+The minimal firmware builds successfully, but flashing is currently blocked because `/dev/ttyUSB0` is owned by `root:dialout` and the current user is not in the `dialout` group. Add the user to that group, start a new login session, and retry the flash:
+
+```text
+sudo usermod -aG dialout "$USER"
+```
+
 ## Fallback
 
 Only if direct board access fails:
