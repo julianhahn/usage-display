@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PROPOSED — Usage Display Program Design",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 760]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [80, 110],
+    "cols": 4,
+    "gapX": 50,
+    "gapY": 100,
+    "cellW": 200,
+    "cellH": 125
+  },
+  "components": [
+    {"id": "boot", "type": "backend", "label": "Boot", "sublabel": "initialize hardware", "row": 0, "col": 0},
+    {"id": "wifi", "type": "backend", "label": "Wi-Fi Manager", "sublabel": "network connection", "row": 0, "col": 1},
+    {"id": "credentials", "type": "security", "label": "Credential Provider", "sublabel": "build-provisioned", "row": 1, "col": 0},
+    {"id": "scheduler", "type": "backend", "label": "Refresh Scheduler", "sublabel": "every 5 minutes", "row": 1, "col": 1},
+    {"id": "adapter", "type": "backend", "label": "Usage API Adapter", "sublabel": "HTTPS + response mapping", "row": 1, "col": 2},
+    {"id": "chatgpt", "type": "external", "label": "ChatGPT Usage Endpoint", "sublabel": "internal endpoint", "row": 1, "col": 3, "size": [200, 125]},
+    {"id": "state", "type": "database", "label": "Usage State", "sublabel": "fresh · stale · none", "row": 2, "col": 2},
+    {"id": "presenter", "type": "frontend", "label": "OLED Presenter", "sublabel": "shows percentage", "row": 2, "col": 1}
+  ],
+  "connections": [
+    {"from": "boot", "to": "wifi", "label": "starts", "route": "orthogonal-h"},
+    {"from": "boot", "to": "credentials", "label": "loads", "route": "orthogonal-v"},
+    {"from": "boot", "to": "scheduler", "label": "starts", "route": "orthogonal-h"},
+    {"from": "scheduler", "to": "adapter", "label": "triggers", "route": "orthogonal-h"},
+    {"from": "adapter", "to": "wifi", "label": "uses", "route": "orthogonal-v"},
+    {"from": "adapter", "to": "chatgpt", "label": "GET /wham/usage", "route": "orthogonal-h"},
+    {"from": "adapter", "to": "state", "label": "maps success or error", "route": "orthogonal-v"},
+    {"from": "state", "to": "presenter", "label": "provides display state", "route": "orthogonal-h"}
+  ]
+}

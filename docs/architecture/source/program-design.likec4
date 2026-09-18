@@ -1,0 +1,55 @@
+// PROPOSED — human sign-off required before implementation.
+specification {
+  element system
+  element system_Ext
+}
+
+model {
+  usageDisplay = system "Usage Display" {
+    description "Proposed direct-board program design for the weekly GPT usage display"
+
+    boot = container "Boot" {
+      description "Initializes hardware and starts the application"
+    }
+    wifi = container "Wi-Fi Manager" {
+      description "Connects to the configured wireless network"
+    }
+    credentials = container "Credential Provider" {
+      description "Provides build-provisioned ChatGPT credentials"
+    }
+    scheduler = container "Refresh Scheduler" {
+      description "Triggers a usage refresh every five minutes"
+    }
+    adapter = container "Usage API Adapter" {
+      description "Calls the usage endpoint and maps its response to the project model"
+    }
+    state = container "Usage State" {
+      description "Stores the latest valid value and stale or unavailable status"
+    }
+    presenter = container "OLED Presenter" {
+      description "Renders the current usage state on the OLED"
+    }
+  }
+  chatgpt = system_Ext "ChatGPT Usage Endpoint" {
+    description "Internal endpoint returning subscription rate-limit windows"
+  }
+
+  usageDisplay.boot -> usageDisplay.credentials "loads credentials"
+  usageDisplay.boot -> usageDisplay.wifi "starts connection"
+  usageDisplay.boot -> usageDisplay.scheduler "starts scheduler"
+  usageDisplay.scheduler -> usageDisplay.wifi "requires connected network"
+  usageDisplay.scheduler -> usageDisplay.adapter "triggers every five minutes"
+  usageDisplay.adapter -> usageDisplay.credentials "reads bearer token and account ID"
+  usageDisplay.adapter -> usageDisplay.wifi "sends HTTPS request"
+  usageDisplay.adapter -> chatgpt "GET /backend-api/wham/usage"
+  chatgpt -> usageDisplay.adapter "returns usage JSON"
+  usageDisplay.adapter -> usageDisplay.state "maps success or error"
+  usageDisplay.state -> usageDisplay.presenter "provides fresh, stale, or unavailable state"
+}
+
+views {
+  view proposedProgramDesign of usageDisplay {
+    include *
+    title "PROPOSED — Usage Display Program Design"
+  }
+}
