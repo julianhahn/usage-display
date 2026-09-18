@@ -34,7 +34,8 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Create the Rust project skeleton.
 - [x] Configure the ESP32-S3 build target (`xtensa-esp32s3-none-elf`, `build-std = ["core"]`).
 - [ ] Build and flash a minimal firmware image.
-  - Blocker: the skeleton still uses the default `std` binary entry point. The ESP32-S3 target is `no_std` and needs a minimal `no_std`/panic-handler firmware entry before it can build.
+  - [x] Build the minimal `no_std` firmware for the ESP32-S3 target.
+  - [ ] Flash it to the board.
 - [ ] Connect the board to Wi-Fi.
 - [ ] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time.
 - [ ] Send an HTTPS GET request to `/backend-api/wham/usage`.

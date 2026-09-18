@@ -1,8 +1,14 @@
-//! Firmware entry point.
-//!
-//! Hardware initialization and the usage refresh flow are intentionally left
-//! for the next implementation steps.
+#![no_std]
+#![no_main]
 
-fn main() {
-    // Skeleton only: no hardware behavior yet.
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
+}
+
+#[esp_hal::main]
+fn main() -> ! {
+    loop {}
 }
