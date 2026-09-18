@@ -10,3 +10,7 @@ Keep architecture sources and human-facing rendered views separate:
 When architecture changes, update the source first. Then regenerate the matching human-facing view.
 
 Do not put generated HTML next to the LikeC4 source files.
+
+## Long-running commands
+
+Run commands that may take longer than two minutes as background tasks. Write output to `.logs/` and check progress with short polling commands. Do not block the chat on long installs, builds, or flashes.
