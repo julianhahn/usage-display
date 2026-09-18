@@ -49,3 +49,13 @@ Each work session follows this order:
 The agent may explain, map, and propose. The human signs off on architecture and program design.
 
 See [Architecture process](docs/architecture-process.md).
+
+## Local firmware credentials
+
+For local firmware builds, copy `secrets/build.env.example` to `secrets/build.env` and fill in the ChatGPT OAuth token and account ID. Build with:
+
+```text
+scripts/build-local.sh
+```
+
+The credentials file is gitignored and must never be committed or printed. The build embeds these values in the firmware, so this flow is only for the trusted private-home prototype. Keep the token out of shell history and revoke it after testing if needed.
