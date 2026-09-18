@@ -42,7 +42,8 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time. The local build script sources them from `~/.codex/auth.json` when they are not in `secrets/build.env`.
 - [x] Send an HTTPS GET request to `/backend-api/wham/usage`.
 - [x] Parse the weekly usage window.
-- [ ] Convert `used_percent` to `remaining_percent` in the UsageSnapshot boundary.
+- [ ] Enable TLS certificate verification. The first `embedded-tls` attempt stalled during the handshake. A switch to reqwless's `mbedtls-rs` backend was drafted but not compiled, flashed, or verified. Do not mark complete until serial output proves a verified request.
+- [ ] Convert `used_percent` to `remaining_percent` in the UsageSnapshot boundary. A local draft exists but was not flashed or verified.
 - [x] Print the result through the serial connection.
 - [ ] Show the result on the OLED.
 - [ ] Refresh every five minutes.
@@ -59,9 +60,33 @@ CHATGPT_ACCESS_TOKEN=... CHATGPT_ACCOUNT_ID=... cargo build
 
 The resulting firmware contains the test token. This is acceptable for the private home prototype. The token must be revoked after a test if needed.
 
+## TLS and snapshot checkpoint
+
+The direct HTTPS proof currently uses encrypted transport without certificate verification. The board successfully reached the endpoint and parsed the weekly window, but the certificate chain is not yet validated on-device.
+
+The next implementation should use reqwless with `default-features = false` and the `mbedtls-rs` feature. This is the Espressif-oriented backend and should replace the stalled `embedded-tls` handshake. Keep the CA trust material in a checked-in DER file, use the smallest appropriate trust anchor, and verify the result on the board before changing the TODO status.
+
+The approved `UsageSnapshot` boundary remains:
+
+```text
+remaining_percent
+reset_at
+status: fresh | stale | unavailable
+```
+
+No token or full response may be printed.
+
 ## Latest hardware proof
 
 The minimal firmware flashed successfully to `/dev/ttyUSB0` with the project-local `espflash 4.4.0` path and the checked-in ESP-IDF 5.5.1 bootloader. The probe identified an ESP32-S3 revision v0.2 with 8 MB flash. The Wi-Fi firmware acquired IPv4 `192.168.178.70/24` by DHCP.
+
+## Current checkpoint
+
+- Direct board HTTPS works with HTTP 200 and the ChatGPT weekly window.
+- The latest TLS attempt switched from `embedded-tls` to `mbedtls-rs` because the former stalled during certificate verification on the board.
+- Current working tree commit: `a20672b feat: fetch ChatGPT usage over board HTTPS`.
+- Certificate verification and the final `UsageSnapshot` conversion are not yet proven after the backend switch.
+- Resume by checking the background task result. Do not assume TLS verification succeeded until the board prints a verified response.
 
 ## Fallback
 
