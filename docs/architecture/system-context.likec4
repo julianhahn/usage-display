@@ -8,16 +8,33 @@ model {
   julian = person "Julian"
   usageDisplay = system "Usage Display" {
     description "Shows the remaining weekly GPT usage limit"
+
+    wifi = container "Wi-Fi Connection"
+    usageClient = container "Usage API Client"
+    refreshLoop = container "Usage Refresh Loop"
+    usageState = container "Usage State"
+    oled = container "OLED Display"
   }
   openai = system_Ext "OpenAI Usage Service"
 
   julian -> usageDisplay "views remaining usage"
-  usageDisplay -> openai "requests usage every 5 minutes over Wi-Fi"
+  refreshLoop -> wifi "uses"
+  refreshLoop -> usageClient "starts refresh"
+  usageClient -> wifi "sends HTTPS request"
+  usageClient -> openai "requests usage"
+  usageClient -> usageState "stores result"
+  usageState -> oled "provides value to show"
+  oled -> julian "shows remaining usage"
 }
 
 views {
   view index {
     include *
     title "GPT Usage Display — System Context"
+  }
+
+  view usageDisplay of usageDisplay {
+    include *
+    title "GPT Usage Display — Containers"
   }
 }
