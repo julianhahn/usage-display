@@ -16,6 +16,9 @@ model {
       description "Provides the build-provisioned access token and account ID"
     }
     wifi = container "Wi-Fi Connection"
+    clock = container "TLS Clock" {
+      description "Fetches unauthenticated NTP time before checking TLS certificate dates; lookup failure skips HTTPS"
+    }
     usageClient = container "Usage API Adapter" {
       description "Sends the HTTPS request and converts the ChatGPT response"
     }
@@ -28,10 +31,16 @@ model {
     oled = container "OLED Display"
   }
   openai = system_Ext "OpenAI Usage Service"
+  ntp = system_Ext "Cloudflare NTP" {
+    description "time.cloudflare.com, UDP 123; not authenticated"
+  }
 
   julian -> usageDisplay "views remaining usage"
   startup -> credentials "reads"
   startup -> wifi "connects"
+  startup -> clock "syncs after Wi-Fi connects"
+  clock -> ntp "requests time over UDP 123"
+  usageClient -> clock "requires time for certificate date checks"
   startup -> refreshLoop "starts"
   refreshLoop -> wifi "uses"
   refreshLoop -> usageClient "starts refresh every five minutes"

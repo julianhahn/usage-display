@@ -25,7 +25,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Document the working ChatGPT usage request.
 - [x] Add the direct board request flow to the LikeC4 model.
 - [x] Decide the exact `UsageSnapshot` fields (signed off: remaining percentage, reset time, and fresh/stale/unavailable status).
-- [ ] Confirm the board display controller and I2C pins from the V3.2 schematic.
+- [x] Confirm the V3.2 OLED wiring and compatible driver. SDA 17, SCL 18, reset 21, active-low display power 36; Heltec's driver uses SSD1306 commands at `0x3c`, 128×64. The schematic does not name the controller silicon.
 - [x] Choose the Rust ESP32-S3 framework and packages (`esp-hal` stack signed off).
 - [x] Sign off the proposed program design before implementation. Signed-off sources: `docs/architecture/program-design.md` and `docs/architecture/source/program-design.likec4`; view: `docs/architecture/view/program-design.html`.
 
@@ -42,10 +42,11 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time. The local build script sources them from `~/.codex/auth.json` when they are not in `secrets/build.env`.
 - [x] Send an HTTPS GET request to `/backend-api/wham/usage`.
 - [x] Parse the weekly usage window.
-- [ ] Enable TLS certificate verification. The first `embedded-tls` attempt stalled during the handshake. A switch to reqwless's `mbedtls-rs` backend was drafted but not compiled, flashed, or verified. Do not mark complete until serial output proves a verified request.
-- [ ] Convert `used_percent` to `remaining_percent` in the UsageSnapshot boundary. A local draft exists but was not flashed or verified.
+- [x] Enable TLS certificate verification. The board fetched NTP time, checked the certificate chain, hostname, and dates, and received HTTP 200. An unrelated root was rejected with X.509 error `0x2700`. The working firmware was restored and succeeded again.
+- [x] Fetch NTP time at boot before TLS. Skip HTTPS if the ten-second time lookup fails. Ordinary NTP is unauthenticated, as approved for this prototype.
+- [ ] Finish the `UsageSnapshot` boundary. A tested percentage conversion now drives the OLED, but the complete snapshot model is not implemented.
 - [x] Print the result through the serial connection.
-- [ ] Show the result on the OLED.
+- [x] Show the result on the OLED. The firmware wrote `93% remaining` from 7% weekly usage (`.logs/oled-serial.log`), and Julian confirmed the screen works.
 - [ ] Refresh every five minutes.
 - [ ] Keep the last good value when a request fails.
 - [ ] Show a clear error state when no value exists.
@@ -62,9 +63,9 @@ The resulting firmware contains the test token. This is acceptable for the priva
 
 ## TLS and snapshot checkpoint
 
-The direct HTTPS proof currently uses encrypted transport without certificate verification. The board successfully reached the endpoint and parsed the weekly window, but the certificate chain is not yet validated on-device.
+The current source and flashed firmware use verified TLS through `mbedtls-rs`, after fetching time from `time.cloudflare.com`. The latest hardware test received HTTP 200 and a 604800-second weekly window with 7% used, then successfully wrote 93% remaining to the OLED (`.logs/oled-serial.log`).
 
-The next implementation should use reqwless with `default-features = false` and the `mbedtls-rs` feature. This is the Espressif-oriented backend and should replace the stalled `embedded-tls` handshake. Keep the CA trust material in a checked-in DER file, use the smallest appropriate trust anchor, and verify the result on the board before changing the TODO status.
+Reqwless uses `default-features = false` and the `mbedtls-rs` feature. Platform-independent TLS preserves the existing ESP stack. GTS Root R4 is stored in `certs/gts-root-r4.der`. NTP time is not authenticated; this is an accepted limitation of the private home prototype.
 
 The approved `UsageSnapshot` boundary remains:
 
@@ -82,11 +83,16 @@ The minimal firmware flashed successfully to `/dev/ttyUSB0` with the project-loc
 
 ## Current checkpoint
 
-- Direct board HTTPS works with HTTP 200 and the ChatGPT weekly window.
-- The latest TLS attempt switched from `embedded-tls` to `mbedtls-rs` because the former stalled during certificate verification on the board.
-- Current working tree commit: `a20672b feat: fetch ChatGPT usage over board HTTPS`.
-- Certificate verification and the final `UsageSnapshot` conversion are not yet proven after the backend switch.
-- Resume by checking the background task result. Do not assume TLS verification succeeded until the board prints a verified response.
+- Verified HTTPS is working on the board. The TLS and NTP changes are not committed yet.
+- The board rejected an unrelated ISRG Root X1 trust anchor with error `0x2700` and no HTTP success (`.logs/tls-wrong-root-serial.log`). That temporary source change was removed. The final firmware again succeeded with GTS Root R4 (`.logs/ntp-final-serial.log`).
+- Six host tests cover NTP packet validation, unrelated replies, invalid server status, date bounds, and the 2036 timestamp wrap. Run: `rustc +stable --edition 2024 --test src/parse_ntp_response.rs -o /tmp/usage-display-ntp-tests && /tmp/usage-display-ntp-tests`.
+- Time sync runs once per boot. The TLS clock then advances with elapsed board time. NTP has a ten-second timeout; HTTPS has a thirty-second timeout. Time lookup failure skips HTTPS. This does not yet implement repeated refreshes or clock resynchronization.
+- CMake 4.4.3 and Espressif Clang `esp-20.1.1_20250829` live under `~/.local/opt/usage-display-build-tools/`; `scripts/build-local.sh` loads their optional `env.sh`. Global shell settings and the ESP Rust/Wi-Fi stack are unchanged.
+- `mbedtls-rs` uses `embassy-time` and `hook-wall-clock`, not its `esp32s3` feature, which requires an incompatible older `esp-hal`.
+- LikeC4 sources, architecture specifications, and rendered views include NTP.
+- Julian chose OLED output before a separate snapshot task. `OledPresenter` now handles power, reset, initialization, progress text, percentage output, and no-data text. Missing/nonweekly windows and usage above 100 are not displayed as a valid percentage.
+- Three additional host tests cover remaining-percentage conversion: `rustc +stable --edition 2024 --test src/remaining_percent.rs -o /tmp/usage-display-percentage-tests && /tmp/usage-display-percentage-tests`.
+- The latest firmware is flashed, the display acknowledged all writes, and Julian confirmed the visible result works. A complete `UsageSnapshot`, five-minute refresh, and stale-value handling remain open.
 
 ## Fallback
 

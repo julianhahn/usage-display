@@ -16,6 +16,7 @@
     "cellH": 130
   },
   "components": [
+    {"id": "ntp", "type": "external", "label": "Cloudflare NTP", "sublabel": "unauthenticated time", "pos": [580, 20]},
     {"id": "startup", "type": "backend", "label": "Boot and Startup", "sublabel": "starts device flow", "row": 0, "col": 0},
     {"id": "credentials", "type": "security", "label": "Credential Store", "sublabel": "token + account ID", "row": 0, "col": 1},
     {"id": "wifi", "type": "cloud", "label": "Wi-Fi", "sublabel": "network connection", "row": 0, "col": 2},
@@ -26,6 +27,7 @@
     {"id": "julian", "type": "frontend", "label": "Julian", "sublabel": "views remaining usage", "row": 1, "col": 0}
   ],
   "connections": [
+    {"from": "wifi", "to": "ntp", "label": "UDP 123"},
     {"from": "startup", "to": "credentials", "label": "reads", "route": "straight"},
     {"from": "credentials", "to": "wifi", "label": "provides config", "route": "straight"},
     {"from": "wifi", "to": "client", "label": "carries HTTPS", "route": "straight"},

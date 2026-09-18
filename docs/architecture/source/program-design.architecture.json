@@ -4,20 +4,22 @@
   "meta": {
     "title": "SIGNED OFF — Usage Display Program Design",
     "quality_profile": "showcase",
-    "viewBox": [1100, 760]
+    "viewBox": [1100, 590]
   },
   "layout": {
     "mode": "grid",
-    "origin": [80, 110],
+    "origin": [80, 80],
     "cols": 4,
     "gapX": 50,
-    "gapY": 100,
+    "gapY": 65,
     "cellW": 200,
     "cellH": 125
   },
   "components": [
     {"id": "boot", "type": "backend", "label": "Boot", "sublabel": "initialize hardware", "row": 0, "col": 0},
     {"id": "wifi", "type": "backend", "label": "Wi-Fi Manager", "sublabel": "network connection", "row": 0, "col": 1},
+    {"id": "clock", "type": "security", "label": "TLS Clock", "sublabel": "certificate date checks", "row": 0, "col": 2},
+    {"id": "ntp", "type": "external", "label": "Cloudflare NTP", "sublabel": "unauthenticated time", "row": 0, "col": 3},
     {"id": "credentials", "type": "security", "label": "Credential Provider", "sublabel": "build-provisioned", "row": 1, "col": 0},
     {"id": "scheduler", "type": "backend", "label": "Refresh Scheduler", "sublabel": "every 5 minutes", "row": 1, "col": 1},
     {"id": "adapter", "type": "backend", "label": "Usage API Adapter", "sublabel": "HTTPS + response mapping", "row": 1, "col": 2},
@@ -30,7 +32,9 @@
     {"from": "boot", "to": "credentials", "label": "loads", "route": "orthogonal-v"},
     {"from": "boot", "to": "scheduler", "label": "starts", "route": "orthogonal-h"},
     {"from": "scheduler", "to": "adapter", "label": "triggers", "route": "orthogonal-h"},
-    {"from": "adapter", "to": "wifi", "label": "uses", "route": "orthogonal-v"},
+    {"from": "wifi", "to": "clock", "label": "then syncs"},
+    {"from": "clock", "to": "ntp", "label": "UDP 123"},
+    {"from": "clock", "to": "adapter", "label": "required for TLS", "labelDy": 24},
     {"from": "adapter", "to": "chatgpt", "label": "GET /wham/usage", "route": "orthogonal-h"},
     {"from": "adapter", "to": "state", "label": "maps success or error", "route": "orthogonal-v"},
     {"from": "state", "to": "presenter", "label": "provides display state", "route": "orthogonal-h"}

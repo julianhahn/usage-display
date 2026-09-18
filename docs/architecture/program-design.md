@@ -16,6 +16,7 @@ The first design is direct-board-first. A Linux Helper is only a fallback if the
 Application coordinator
 ├── Startup and configuration
 ├── Wi-Fi manager
+├── TLS clock
 ├── Usage API adapter
 ├── Usage state
 ├── OLED presenter
@@ -34,6 +35,14 @@ Initializes the ESP32-S3 peripherals and the board pins. Build-time environment 
 
 Connects to the configured network and reports whether the connection is ready. It owns reconnect attempts. Other parts do not manipulate Wi-Fi details directly.
 
+### TLS clock
+
+After Wi-Fi connects, fetch time from `time.cloudflare.com` using NTP on UDP port 123. Allow ten seconds for DNS and the reply. Check the sender, request nonce, server status, and supported date range. A failed lookup skips HTTPS.
+
+Register the successful time with `mbedtls-rs`. Add elapsed board time when checking certificate dates. The current one-request proof synchronizes once per boot.
+
+Ordinary NTP is not authenticated. The human owner approved this trade-off for the private home prototype. A network attacker could change the reported time; the nonce only rejects replies unrelated to this request.
+
 ### Usage API adapter
 
 Builds the HTTPS request to:
@@ -45,6 +54,8 @@ GET https://chatgpt.com/backend-api/wham/usage
 It adds the bearer token and `ChatGPT-Account-Id` headers. It parses the response shape and converts the weekly window's `used_percent` into the project model's `remaining_percent`.
 
 No OpenAI-specific JSON types leave this boundary.
+
+TLS requires the GTS Root R4 trust anchor, the `chatgpt.com` hostname, and valid certificate dates. There is no fallback that disables verification. The request timeout is thirty seconds.
 
 ### Usage state
 
@@ -68,9 +79,14 @@ Renders only the project-owned state. It knows the SSD1306-compatible display an
 - SDA: GPIO17
 - SCL: GPIO18
 - reset: GPIO21
+- display power: GPIO36, low = on
 - resolution: 128×64
 
-The presenter does not know the ChatGPT response format.
+The [V3.2 schematic](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/WiFi_LoRa_32_V3.2_Schematic_Diagram.pdf) and [V3.2 pin map](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/Wi-Fi_LoRa32_V3.2_Pinmap.png) identify the wiring. The schematic labels the panel only as `0.96_OLED`; [Heltec's driver](https://github.com/HelTecAutomation/Heltec_ESP32/blob/6ab5cf916e01b0930eaa2245323c728f849705c4/src/heltec.cpp) uses SSD1306 commands, address `0x3c`, and 128×64 geometry.
+
+The first screen shows `Connecting...`, then `Checking time...` and `Reading usage...`. A valid weekly result shows the remaining percentage. Missing weekly data shows `No weekly data`; a failed time lookup or request shows `No data`. Refresh and stale-value handling remain separate work.
+
+The presenter takes a percentage or a status string. It does not know the ChatGPT response format.
 
 ### Refresh scheduler
 
@@ -81,6 +97,7 @@ Starts one refresh at boot and schedules another refresh every five minutes. It 
 ```text
 Startup
   → Wi-Fi manager
+  → NTP time lookup and TLS clock
   → Usage API adapter
   → HTTPS request to ChatGPT
   → JSON response
@@ -131,6 +148,8 @@ ChatGPT response
                          ConnectingWifi / Ready
 ```
 
+`Ready` requires a successful NTP time lookup at boot. Without it, the usage request is skipped.
+
 If a previous successful snapshot exists, `WifiUnavailable`, `RequestFailed`, and `InvalidResponse` render that value as `stale`. Without a previous snapshot, they render `unavailable`.
 
 ## Error handling
@@ -138,6 +157,7 @@ If a previous successful snapshot exists, `WifiUnavailable`, `RequestFailed`, an
 | Failure | State behavior | Display behavior | Next action |
 | --- | --- | --- | --- |
 | Wi-Fi cannot connect | Keep previous snapshot, or `unavailable` | Last value with stale marker, or `No data` | Retry on the next cycle |
+| NTP lookup fails | No usage request; unavailable at boot | `No data` | Retry time lookup before a later request |
 | HTTPS connection fails | Keep previous snapshot as `stale` | Last value with error marker | Retry on the next cycle |
 | HTTP non-success status | Keep previous snapshot as `stale` | Last value with error marker | Retry on the next cycle |
 | JSON is malformed | Keep previous snapshot as `stale` | Last value with error marker | Retry on the next cycle |
@@ -162,7 +182,7 @@ The approved Rust stack is:
 
 - `esp-hal` for ESP32-S3 peripherals
 - a compatible ESP32-S3 Wi-Fi crate
-- `embedded-tls` for HTTPS
+- `mbedtls-rs` in platform-independent mode for verified HTTPS
 - `reqwless` for embedded HTTP
 - `serde-json-core` for bounded JSON parsing
 - `ssd1306` for the display controller
@@ -182,6 +202,8 @@ The source code and Git history must not contain credentials. The resulting firm
 
 ## Testing seams
 
+- Test the NTP reply parser on the host, including invalid replies and the 2036 timestamp wrap.
+- On the board, verify that the correct trust root succeeds and an unrelated root fails.
 - Test the response parser with recorded, redacted JSON fixtures.
 - Test conversion from `used_percent` to `remaining_percent` without hardware.
 - Test missing weekly-window behavior.

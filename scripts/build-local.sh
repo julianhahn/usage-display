@@ -66,5 +66,12 @@ if [[ -f "$HOME/export-esp.sh" ]]; then
   source "$HOME/export-esp.sh"
 fi
 
+# Optional C toolchain for TLS dependencies. Keep it local to this build process.
+BUILD_TOOLS_ENV="$HOME/.local/opt/usage-display-build-tools/env.sh"
+if [[ -f "$BUILD_TOOLS_ENV" ]]; then
+  # shellcheck disable=SC1090
+  source "$BUILD_TOOLS_ENV"
+fi
+
 cd "$ROOT_DIR"
 exec cargo +esp build --target "$TARGET"

@@ -14,6 +14,9 @@ model {
     wifi = container "Wi-Fi Manager" {
       description "Connects to the configured wireless network"
     }
+    clock = container "TLS Clock" {
+      description "Fetches NTP time after Wi-Fi connects; TLS is skipped if time lookup fails"
+    }
     credentials = container "Credential Provider" {
       description "Provides build-provisioned ChatGPT credentials"
     }
@@ -30,6 +33,9 @@ model {
       description "Renders the current usage state on the OLED"
     }
   }
+  ntp = system_Ext "Cloudflare NTP" {
+    description "time.cloudflare.com on UDP port 123; ordinary NTP is unauthenticated"
+  }
   chatgpt = system_Ext "ChatGPT Usage Endpoint" {
     description "Internal endpoint returning subscription rate-limit windows"
   }
@@ -37,6 +43,9 @@ model {
   usageDisplay.boot -> usageDisplay.credentials "loads credentials"
   usageDisplay.boot -> usageDisplay.wifi "starts connection"
   usageDisplay.boot -> usageDisplay.scheduler "starts scheduler"
+  usageDisplay.wifi -> usageDisplay.clock "then syncs time"
+  usageDisplay.clock -> ntp "requests time over UDP 123"
+  usageDisplay.clock -> usageDisplay.adapter "required for TLS certificate date checks"
   usageDisplay.scheduler -> usageDisplay.wifi "requires connected network"
   usageDisplay.scheduler -> usageDisplay.adapter "triggers every five minutes"
   usageDisplay.adapter -> usageDisplay.credentials "reads bearer token and account ID"

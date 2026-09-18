@@ -1,6 +1,12 @@
 #![no_std]
 #![no_main]
 
+#[path = "OledPresenter.rs"]
+mod oled_presenter;
+mod parse_ntp_response;
+mod remaining_percent;
+mod synchronize_clock;
+
 use core::{fmt::Write as _, panic::PanicInfo};
 
 use embassy_executor::Spawner;
@@ -11,7 +17,12 @@ use embassy_net::{
 };
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Read;
-use esp_hal::{clock::CpuClock, timer::timg::TimerGroup};
+use esp_hal::{
+    clock::CpuClock,
+    gpio::{Level, Output, OutputConfig},
+    i2c::master::{Config as I2cConfig, I2c},
+    timer::timg::TimerGroup,
+};
 use esp_println::println;
 use esp_radio::wifi::{
     AuthenticationMethodConfig, Config, ControllerConfig, Interface, WifiController,
@@ -19,7 +30,7 @@ use esp_radio::wifi::{
 };
 use heapless::String;
 use reqwless::{
-    client::{HttpClient, TlsConfig, TlsVerify},
+    client::{HttpClient, TlsConfig},
     headers::ContentType,
     request::{Method, RequestBuilder},
     response::Status,
@@ -71,6 +82,23 @@ async fn main(spawner: Spawner) -> ! {
     let timg0 = TimerGroup::new(peripherals.TIMG0);
     esp_rtos::start(timg0.timer0, peripherals.FROM_CPU_INTR0);
 
+    let i2c = I2c::new(peripherals.I2C0, I2cConfig::default())
+        .unwrap()
+        .with_sda(peripherals.GPIO17)
+        .with_scl(peripherals.GPIO18);
+    let power = Output::new(peripherals.GPIO36, Level::Low, OutputConfig::default());
+    let reset = Output::new(peripherals.GPIO21, Level::High, OutputConfig::default());
+    let mut oled = match oled_presenter::OledPresenter::new(i2c, power, reset).await {
+        Ok(display) => {
+            println!("usage-display: OLED initialized at 0x3c");
+            Some(display)
+        }
+        Err(error) => {
+            println!("usage-display: OLED initialization failed: {:?}", error);
+            None
+        }
+    };
+
     let station_config = Config::Station(
         StationConfig::default()
             .with_ssid(WIFI_SSID.try_into().unwrap())
@@ -104,8 +132,31 @@ async fn main(spawner: Spawner) -> ! {
         println!("usage-display: DHCP finished without IPv4 config");
     }
 
-    println!("usage-display: starting HTTPS usage request");
-    match fetch_usage(stack).await {
+    if let Some(display) = oled.as_mut() {
+        if let Err(error) = display.show_status("Checking time...") {
+            println!("usage-display: OLED write failed: {:?}", error);
+        }
+    }
+    println!("usage-display: fetching time via NTP");
+    let result = match synchronize_clock::synchronize_clock(stack).await {
+        Ok(unix_seconds) => {
+            println!(
+                "usage-display: NTP clock ready unix_seconds={}",
+                unix_seconds
+            );
+            if let Some(display) = oled.as_mut() {
+                if let Err(error) = display.show_status("Reading usage...") {
+                    println!("usage-display: OLED write failed: {:?}", error);
+                }
+            }
+            println!("usage-display: starting HTTPS usage request with certificate verification");
+            embassy_time::with_timeout(Duration::from_secs(30), fetch_usage(stack))
+                .await
+                .unwrap_or(Err(UsageRequestError::Timeout))
+        }
+        Err(error) => Err(UsageRequestError::Clock(error)),
+    };
+    match result {
         Ok(snapshot) => {
             println!(
                 "usage-display: ChatGPT HTTPS status=200 body_bytes={} weekly_used_percent={:?} weekly_window_seconds={:?} weekly_reset_at={:?}",
@@ -114,9 +165,31 @@ async fn main(spawner: Spawner) -> ! {
                 snapshot.weekly_window_seconds,
                 snapshot.weekly_reset_at,
             );
+            let remaining = remaining_percent::remaining_percent(
+                snapshot.weekly_used_percent,
+                snapshot.weekly_window_seconds,
+            );
+            if let Some(display) = oled.as_mut() {
+                let result = match remaining {
+                    Some(value) => display.show_remaining(value),
+                    None => display.show_status("No weekly data"),
+                };
+                match result {
+                    Ok(()) => println!(
+                        "usage-display: OLED write complete remaining_percent={:?}",
+                        remaining
+                    ),
+                    Err(error) => println!("usage-display: OLED write failed: {:?}", error),
+                }
+            }
         }
         Err(error) => {
-            println!("usage-display: ChatGPT HTTPS request failed: {:?}", error);
+            println!("usage-display: usage request failed: {:?}", error);
+            if let Some(display) = oled.as_mut() {
+                if let Err(error) = display.show_status("No data") {
+                    println!("usage-display: OLED write failed: {:?}", error);
+                }
+            }
         }
     }
 
@@ -134,6 +207,9 @@ struct UsageResult {
 
 #[derive(Debug)]
 enum UsageRequestError {
+    Clock(synchronize_clock::ClockError),
+    TlsSetup,
+    Timeout,
     BuildHeader,
     Http(reqwless::Error),
     HttpStatus(u16),
@@ -146,11 +222,18 @@ async fn fetch_usage(stack: embassy_net::Stack<'static>) -> Result<UsageResult, 
     let tcp_client = TcpClient::new(stack, tcp_state);
     let dns_socket = DnsSocket::new(stack);
 
-    // This first HTTPS proof intentionally disables certificate verification. The
-    // request is still encrypted, but CA verification is a follow-up hardening step.
-    let mut tls_rx = [0u8; 16_384];
-    let mut tls_tx = [0u8; 16_384];
-    let tls = TlsConfig::new(0x5eed_2026, &mut tls_rx, &mut tls_tx, TlsVerify::None);
+    // Wi-Fi keeps the hardware entropy source enabled during this request.
+    static TLS_RNG: StaticCell<esp_hal::rng::Trng> = StaticCell::new();
+    let rng = TLS_RNG.init(esp_hal::rng::Trng::try_new().map_err(|_| UsageRequestError::TlsSetup)?);
+    let tls_context = mbedtls_rs::Tls::new(rng).map_err(|_| UsageRequestError::TlsSetup)?;
+    let ca = mbedtls_rs::Certificate::new_no_copy(include_bytes!("../certs/gts-root-r4.der"))
+        .map_err(|_| UsageRequestError::TlsSetup)?;
+    let tls = TlsConfig::new(
+        mbedtls_rs::TlsVersion::Tls1_2,
+        ca,
+        None,
+        tls_context.reference(),
+    );
     let mut client = HttpClient::new_with_tls(&tcp_client, &dns_socket, tls);
 
     let mut authorization = String::<2304>::new();
@@ -196,9 +279,16 @@ async fn fetch_usage(stack: embassy_net::Stack<'static>) -> Result<UsageResult, 
 
     let (payload, _) = serde_json_core::from_slice::<UsagePayload>(&body_buffer[..body_bytes])
         .map_err(|_| UsageRequestError::Json)?;
-    let weekly = payload
-        .rate_limit
-        .and_then(|rate_limit| rate_limit.secondary_window.or(rate_limit.primary_window));
+    let weekly = payload.rate_limit.and_then(|rate_limit| {
+        rate_limit
+            .secondary_window
+            .filter(|window| window.limit_window_seconds == Some(604_800))
+            .or_else(|| {
+                rate_limit
+                    .primary_window
+                    .filter(|window| window.limit_window_seconds == Some(604_800))
+            })
+    });
 
     Ok(UsageResult {
         body_bytes,
