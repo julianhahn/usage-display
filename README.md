@@ -29,6 +29,8 @@ Official documentation:
 
 ## Rust target
 
+The Rust project skeleton is now present in `Cargo.toml`, `src/main.rs`, and `.cargo/config.toml`. It targets the ESP32-S3, but it does not initialize hardware or implement device behavior yet.
+
 We will write the application in Rust. Rust must be compiled for the ESP32-S3 target and linked with the embedded runtime and board hardware support. The result is firmware, usually a binary image that can be flashed to the board over USB.
 
 The exact Rust framework and target setup are a design decision. We will choose them after we understand the hardware, runtime model, and required features.

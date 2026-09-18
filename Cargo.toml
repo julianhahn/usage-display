@@ -1,0 +1,17 @@
+[package]
+name = "usage-display"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+# Runtime and hardware crates will be added in the next implementation steps.
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+panic = "abort"

@@ -31,7 +31,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 
 ## Direct board proof
 
-- [ ] Create the Rust project skeleton.
+- [x] Create the Rust project skeleton.
 - [ ] Configure the ESP32-S3 build target.
 - [ ] Build and flash a minimal firmware image.
 - [ ] Connect the board to Wi-Fi.
