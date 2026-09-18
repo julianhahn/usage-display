@@ -1,6 +1,8 @@
 # Program design proposal
 
-**Status: PROPOSED — waiting for human sign-off**
+**Status: SIGNED OFF — approved by the human owner for implementation**
+
+Decision: implement the direct-board-first design. The Linux Helper remains a fallback only if the board cannot complete the request reliably.
 
 ## Goal
 

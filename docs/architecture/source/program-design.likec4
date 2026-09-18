@@ -1,4 +1,4 @@
-// PROPOSED — human sign-off required before implementation.
+// SIGNED OFF — human approved for implementation.
 specification {
   element system
   element system_Ext
@@ -50,6 +50,6 @@ model {
 views {
   view proposedProgramDesign of usageDisplay {
     include *
-    title "PROPOSED — Usage Display Program Design"
+    title "SIGNED OFF — Usage Display Program Design"
   }
 }

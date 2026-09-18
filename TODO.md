@@ -27,7 +27,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Decide the exact `UsageSnapshot` fields (signed off: remaining percentage, reset time, and fresh/stale/unavailable status).
 - [ ] Confirm the board display controller and I2C pins from the V3.2 schematic.
 - [x] Choose the Rust ESP32-S3 framework and packages (`esp-hal` stack signed off).
-- [ ] Sign off the proposed program design before implementation. Proposals: `docs/architecture/program-design.md` and `docs/architecture/source/program-design.likec4`; view: `docs/architecture/view/program-design.html`.
+- [x] Sign off the proposed program design before implementation. Signed-off sources: `docs/architecture/program-design.md` and `docs/architecture/source/program-design.likec4`; view: `docs/architecture/view/program-design.html`.
 
 ## Direct board proof
 
