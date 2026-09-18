@@ -1,6 +1,8 @@
 # UsageSnapshot proposal
 
-**Status: PROPOSED — human sign-off required**
+**Status: SIGNED OFF**
+
+Human decision: use this minimal weekly usage model for V1. The adapter exposes the remaining percentage and reset time. Refresh failures are represented by `fresh`, `stale`, or `unavailable`; raw credentials and API details stay outside the model.
 
 `UsageSnapshot` is the project-owned model produced by the Usage API Adapter. It keeps ChatGPT response details out of the refresh loop and OLED code.
 
@@ -40,6 +42,6 @@ UsageSnapshot {
 }
 ```
 
-## Sign-off question
+## Decision
 
-Please confirm whether this minimal model is the architecture we should implement. In particular, confirm that the weekly percentage and reset time are enough for V1 and that `fresh` / `stale` / `unavailable` are the right states.
+The human signed off on this model. Weekly remaining percentage and reset time are enough for V1. The states `fresh`, `stale`, and `unavailable` are approved.
