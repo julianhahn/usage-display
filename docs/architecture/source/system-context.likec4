@@ -9,21 +9,37 @@ model {
   usageDisplay = system "Usage Display" {
     description "Shows the remaining weekly GPT usage limit"
 
+    startup = container "Boot and Startup" {
+      description "Initializes the device and starts the refresh loop"
+    }
+    credentials = container "Credential Store" {
+      description "Provides the build-provisioned access token and account ID"
+    }
     wifi = container "Wi-Fi Connection"
-    usageClient = container "Usage API Adapter"
-    refreshLoop = container "Usage Refresh Loop"
-    usageState = container "Usage State"
+    usageClient = container "Usage API Adapter" {
+      description "Sends the HTTPS request and converts the ChatGPT response"
+    }
+    refreshLoop = container "Usage Refresh Loop" {
+      description "Refreshes the usage value every five minutes"
+    }
+    usageState = container "Usage Snapshot" {
+      description "Stores the latest valid value and the last-known value on errors"
+    }
     oled = container "OLED Display"
   }
   openai = system_Ext "OpenAI Usage Service"
 
   julian -> usageDisplay "views remaining usage"
+  startup -> credentials "reads"
+  startup -> wifi "connects"
+  startup -> refreshLoop "starts"
   refreshLoop -> wifi "uses"
-  refreshLoop -> usageClient "starts refresh"
+  refreshLoop -> usageClient "starts refresh every five minutes"
+  usageClient -> credentials "reads token and account ID"
   usageClient -> wifi "sends HTTPS request"
   usageClient -> openai "requests usage and converts response"
-  usageClient -> usageState "stores result"
-  usageState -> oled "provides value to show"
+  usageClient -> usageState "stores a valid result or records an error"
+  usageState -> oled "provides current or last-known value"
   oled -> julian "shows remaining usage"
 }
 

@@ -23,7 +23,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Decide that the API boundary uses an adapter pattern.
 - [x] Define `UsageSnapshot` as the project-owned usage model.
 - [x] Document the working ChatGPT usage request.
-- [ ] Add the direct board request flow to the LikeC4 model.
+- [x] Add the direct board request flow to the LikeC4 model.
 - [ ] Decide the exact `UsageSnapshot` fields.
 - [ ] Confirm the board display controller and I2C pins from the V3.2 schematic.
 - [ ] Choose the Rust ESP32-S3 framework and packages.
