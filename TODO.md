@@ -33,9 +33,9 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 
 - [x] Create the Rust project skeleton.
 - [x] Configure the ESP32-S3 build target (`xtensa-esp32s3-none-elf`, `build-std = ["core"]`).
-- [ ] Build and flash a minimal firmware image.
+- [x] Build and flash a minimal firmware image.
   - [x] Build the minimal `no_std` firmware for the ESP32-S3 target.
-  - [ ] Flash it to the board.
+  - [x] Flash it to the board.
 - [ ] Connect the board to Wi-Fi.
 - [ ] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time.
 - [ ] Send an HTTPS GET request to `/backend-api/wham/usage`.
@@ -57,13 +57,9 @@ CHATGPT_ACCESS_TOKEN=... CHATGPT_ACCOUNT_ID=... cargo build
 
 The resulting firmware contains the test token. This is acceptable for the private home prototype. The token must be revoked after a test if needed.
 
-## Current blocker
+## Latest hardware proof
 
-The minimal firmware builds successfully, but flashing is currently blocked because `/dev/ttyUSB0` is owned by `root:dialout` and the current user is not in the `dialout` group. Add the user to that group, start a new login session, and retry the flash:
-
-```text
-sudo usermod -aG dialout "$USER"
-```
+The minimal firmware flashed successfully to `/dev/ttyUSB0` with `espflash`. The probe identified an ESP32-S3 revision v0.2 with 8 MB flash.
 
 ## Fallback
 
