@@ -26,7 +26,7 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
 - [x] Add the direct board request flow to the LikeC4 model.
 - [x] Decide the exact `UsageSnapshot` fields (signed off: remaining percentage, reset time, and fresh/stale/unavailable status).
 - [ ] Confirm the board display controller and I2C pins from the V3.2 schematic.
-- [ ] Choose the Rust ESP32-S3 framework and packages (proposal created in `docs/architecture/rust-stack-proposal.md`; human sign-off still needed).
+- [x] Choose the Rust ESP32-S3 framework and packages (`esp-hal` stack signed off).
 - [ ] Write and sign off the program design before implementation.
 
 ## Direct board proof

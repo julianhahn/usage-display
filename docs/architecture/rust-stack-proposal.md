@@ -1,6 +1,6 @@
 # Rust stack proposal for the direct board proof
 
-**Status: PROPOSED — human sign-off required**
+**Status: SIGNED OFF — approved for the first direct-board proof**
 
 This proposal covers the first direct-board proof for the Heltec WiFi LoRa 32 V3.2 (`HTIT-WB32LAF`). It does not create the Rust project or choose dependency versions yet.
 
@@ -111,11 +111,13 @@ refresh loop
 
 No board-specific application logic should be placed inside the display driver or the HTTP transport.
 
-## Sign-off questions
+## Decision record
 
-1. Do you approve `esp-hal` as the first framework?
-2. Do you approve the embedded stack of Wi-Fi crate + `embedded-tls` + `reqwless` + `serde-json-core`?
-3. Do you approve `ssd1306` + `embedded-graphics` for the OLED?
-4. Should the implementation pin the current compatible crate versions after this proposal is signed off?
+The human approved this stack for the first direct-board proof:
 
-Until these answers are approved, this remains a proposal and implementation must not start.
+- `esp-hal` is the first framework.
+- The Wi-Fi crate, `embedded-tls`, `reqwless`, and `serde-json-core` form the network and parsing stack.
+- `ssd1306` and `embedded-graphics` form the OLED stack.
+- Compatible crate versions will be pinned when implementation starts.
+
+This approval covers the first proof only. It does not prevent revisiting the stack if Wi-Fi or TLS support blocks the experiment.
