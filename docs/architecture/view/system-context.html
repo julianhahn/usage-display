@@ -5035,7 +5035,7 @@
         <!-- Connection paths (before components for correct z-order) -->
         <path data-edge-from="julian" data-edge-to="display" data-edge-label="views" data-edge-key="0" data-composition-points="200,170;330,170" d="M 200 170 L 330 170" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="display" data-edge-to="client" data-edge-label="refreshes" data-edge-key="1" data-composition-points="450,170;580,170" d="M 450 170 L 580 170" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="client" data-edge-to="openai" data-edge-label="requests usage" data-edge-key="2" data-composition-points="700,170;765,170;765,205;830,205" d="M 700 170 L 757 170 Q 765 170 765 178 L 765 197 Q 765 205 773 205 L 830 205" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="client" data-edge-to="openai" data-edge-label="requests and converts" data-edge-key="2" data-composition-points="700,170;765,170;765,205;830,205" d="M 700 170 L 757 170 Q 765 170 765 178 L 765 197 Q 765 205 773 205 L 830 205" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="client" data-edge-to="state" data-edge-label="stores result" data-edge-key="3" data-composition-points="640,200;640,285;640,285;640,370" d="M 640 200 L 640 285 L 640 285 L 640 370" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="state" data-edge-to="oled" data-edge-label="provides value" data-edge-key="4" data-composition-points="580,400;450,400" d="M 580 400 L 450 400" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
 
@@ -5065,14 +5065,14 @@
         <text data-detail="context" x="390" y="184" class="t-muted" font-size="9" text-anchor="middle">Heltec V3.2 · Wi-Fi</text>
         </g>
 
-        <g id="node-client" data-node-id="client" data-node-label="Usage API Client" tabindex="0" role="button" aria-label="Focus Usage API Client, refreshes every 5 min, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="refreshes every 5 min" data-node-context="Architecture component">
-          <title>Usage API Client · refreshes every 5 min · Architecture component</title>
+        <g id="node-client" data-node-id="client" data-node-label="Usage API Adapter" tabindex="0" role="button" aria-label="Focus Usage API Adapter, refreshes every 5 min, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="refreshes every 5 min" data-node-context="Architecture component">
+          <title>Usage API Adapter · refreshes every 5 min · Architecture component</title>
           <rect x="580" y="140" width="120" height="60" rx="6" class="c-mask"/>
           <rect x="580" y="140" width="120" height="60" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(586 146) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="640" y="168" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Usage API Client</text>
+          <text data-node-label="" data-detail-anchor="" x="640" y="168" class="t-primary" font-size="10.9" font-weight="600" text-anchor="middle">Usage API Adapter</text>
         <text data-detail="context" x="640" y="184" class="t-muted" font-size="8.8" text-anchor="middle">refreshes every 5 min</text>
         </g>
 
@@ -5123,9 +5123,9 @@
           <rect x="488.4" y="150" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
           <text x="515" y="160" class="t-muted" font-size="8" text-anchor="middle">refreshes</text>
         </g>
-        <g data-detail="context" data-edge-from="client" data-edge-to="openai" data-edge-label="requests usage" data-edge-key="2">
-          <rect x="726.4" y="167.5" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="765" y="177.5" class="t-muted" font-size="8" text-anchor="middle">requests usage</text>
+        <g data-detail="context" data-edge-from="client" data-edge-to="openai" data-edge-label="requests and converts" data-edge-key="2">
+          <rect x="709.6" y="167.5" width="110.8" height="14" rx="3" class="c-mask"/>
+          <text x="765" y="177.5" class="t-muted" font-size="8" text-anchor="middle">requests and converts</text>
         </g>
         <g data-detail="context" data-edge-from="client" data-edge-to="state" data-edge-label="stores result" data-edge-key="3">
           <rect x="603.8" y="265" width="72.4" height="14" rx="3" class="c-mask"/>

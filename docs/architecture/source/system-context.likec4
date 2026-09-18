@@ -10,7 +10,7 @@ model {
     description "Shows the remaining weekly GPT usage limit"
 
     wifi = container "Wi-Fi Connection"
-    usageClient = container "Usage API Client"
+    usageClient = container "Usage API Adapter"
     refreshLoop = container "Usage Refresh Loop"
     usageState = container "Usage State"
     oled = container "OLED Display"
@@ -21,7 +21,7 @@ model {
   refreshLoop -> wifi "uses"
   refreshLoop -> usageClient "starts refresh"
   usageClient -> wifi "sends HTTPS request"
-  usageClient -> openai "requests usage"
+  usageClient -> openai "requests usage and converts response"
   usageClient -> usageState "stores result"
   usageState -> oled "provides value to show"
   oled -> julian "shows remaining usage"
