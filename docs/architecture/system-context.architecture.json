@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "GPT Usage Display — Big Picture",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 700]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [80, 140],
+    "cols": 4,
+    "gapX": 50,
+    "gapY": 100,
+    "cellW": 200,
+    "cellH": 130
+  },
+  "components": [
+    {"id": "julian", "type": "frontend", "label": "Julian", "sublabel": "views remaining usage", "row": 0, "col": 0},
+    {"id": "display", "type": "backend", "label": "Usage Display", "sublabel": "Heltec V3.2 · Wi-Fi", "row": 0, "col": 1},
+    {"id": "client", "type": "backend", "label": "Usage API Client", "sublabel": "refreshes every 5 min", "row": 0, "col": 2},
+    {"id": "openai", "type": "external", "label": "OpenAI Usage Service", "sublabel": "external API", "row": 0, "col": 3, "size": [200, 130]},
+    {"id": "state", "type": "database", "label": "Usage State", "sublabel": "last known value", "row": 1, "col": 2},
+    {"id": "oled", "type": "frontend", "label": "OLED Display", "sublabel": "shows remaining usage", "row": 1, "col": 1}
+  ],
+  "connections": [
+    {"from": "julian", "to": "display", "label": "views", "route": "straight"},
+    {"from": "display", "to": "client", "label": "refreshes", "route": "straight"},
+    {"from": "client", "to": "openai", "label": "requests usage", "route": "orthogonal-h"},
+    {"from": "client", "to": "state", "label": "stores result", "route": "orthogonal-v"},
+    {"from": "state", "to": "oled", "label": "provides value", "route": "straight"}
+  ]
+}
