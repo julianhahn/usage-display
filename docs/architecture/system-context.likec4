@@ -1,0 +1,23 @@
+specification {
+  element person
+  element system
+  element system_Ext
+}
+
+model {
+  julian = person "Julian"
+  usageDisplay = system "Usage Display" {
+    description "Shows the remaining weekly GPT usage limit"
+  }
+  openai = system_Ext "OpenAI Usage Service"
+
+  julian -> usageDisplay "views remaining usage"
+  usageDisplay -> openai "requests usage every 5 minutes over Wi-Fi"
+}
+
+views {
+  view index {
+    include *
+    title "GPT Usage Display — System Context"
+  }
+}
