@@ -38,11 +38,12 @@ Read the ChatGPT subscription weekly usage from the Heltec HTIT-WB32LAF WiFi LoR
   - [x] Flash it to the board.
 - [x] Connect the board to Wi-Fi.
 - [x] Run Embassy Net with DHCPv4 and print the acquired IPv4 configuration over serial.
-- [ ] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time.
-- [ ] Send an HTTPS GET request to `/backend-api/wham/usage`.
-- [ ] Parse the weekly usage window.
-- [ ] Convert `used_percent` to `remaining_percent`.
-- [ ] Print the result through the serial connection.
+- [x] Prove direct HTTPS access from the ESP32 to ChatGPT. The board received HTTP 200 and parsed a 604800-second weekly window.
+- [x] Read `CHATGPT_ACCESS_TOKEN` and `CHATGPT_ACCOUNT_ID` at build time. The local build script sources them from `~/.codex/auth.json` when they are not in `secrets/build.env`.
+- [x] Send an HTTPS GET request to `/backend-api/wham/usage`.
+- [x] Parse the weekly usage window.
+- [ ] Convert `used_percent` to `remaining_percent` in the UsageSnapshot boundary.
+- [x] Print the result through the serial connection.
 - [ ] Show the result on the OLED.
 - [ ] Refresh every five minutes.
 - [ ] Keep the last good value when a request fails.

@@ -20,6 +20,40 @@ if [[ -z "${WIFI_SSID:-}" || -z "${WIFI_PASSWORD:-}" ]]; then
   exit 1
 fi
 
+# ChatGPT credentials are preferably loaded directly from the local Codex auth
+# file. They are held only in this process and are never printed or written.
+if [[ -z "${CHATGPT_ACCESS_TOKEN:-}" || -z "${CHATGPT_ACCOUNT_ID:-}" ]]; then
+  CODEX_AUTH_FILE="${CODEX_HOME:-$HOME/.codex}/auth.json"
+  if [[ ! -f "$CODEX_AUTH_FILE" ]]; then
+    echo "Missing ChatGPT credentials and Codex auth file: $CODEX_AUTH_FILE" >&2
+    exit 1
+  fi
+
+  mapfile -t CHATGPT_CREDENTIALS < <(python3 - "$CODEX_AUTH_FILE" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as auth_file:
+    data = json.load(auth_file)
+tokens = data.get("tokens", data)
+access_token = tokens.get("access_token")
+account_id = tokens.get("account_id") or data.get("account_id")
+if not access_token or not account_id:
+    raise SystemExit("Codex auth file has no access_token and account_id")
+print(access_token)
+print(account_id)
+PY
+  )
+  CHATGPT_ACCESS_TOKEN="${CHATGPT_CREDENTIALS[0]}"
+  CHATGPT_ACCOUNT_ID="${CHATGPT_CREDENTIALS[1]}"
+  export CHATGPT_ACCESS_TOKEN CHATGPT_ACCOUNT_ID
+fi
+
+if [[ -z "${CHATGPT_ACCESS_TOKEN:-}" || -z "${CHATGPT_ACCOUNT_ID:-}" ]]; then
+  echo "CHATGPT_ACCESS_TOKEN and CHATGPT_ACCOUNT_ID must be available for the firmware build." >&2
+  exit 1
+fi
+
 # Load the host Cargo installation before selecting the ESP32 toolchain.
 if [[ -f "$HOME/.cargo/env" ]]; then
   # shellcheck disable=SC1091
