@@ -84,7 +84,7 @@ Renders only the project-owned state. It knows the SSD1306-compatible display an
 
 The [V3.2 schematic](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/WiFi_LoRa_32_V3.2_Schematic_Diagram.pdf) and [V3.2 pin map](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/Wi-Fi_LoRa32_V3.2_Pinmap.png) identify the wiring. The schematic labels the panel only as `0.96_OLED`; [Heltec's driver](https://github.com/HelTecAutomation/Heltec_ESP32/blob/6ab5cf916e01b0930eaa2245323c728f849705c4/src/heltec.cpp) uses SSD1306 commands, address `0x3c`, and 128×64 geometry.
 
-The first screen shows `Connecting...`, then `Checking time...` and `Reading usage...`. A valid weekly result shows the remaining percentage. Missing weekly data shows `No weekly data`; a failed time lookup or request shows `No data`. Refresh and stale-value handling remain separate work.
+The first screen shows `Connecting...`, then `Checking time...` and `Reading usage...`. A valid weekly result shows the remaining percentage and `Reset in 2d 14h`. The reset countdown uses network time plus elapsed device time and redraws every minute. Partial hours round up. A missing reset timestamp shows `Reset unknown`; an elapsed window shows `Reset due`. Usage is still fetched only at startup. Missing weekly data shows `No weekly data`; a failed time lookup or request shows `No data`. Refresh and stale-value handling remain separate work.
 
 The presenter takes a percentage or a status string. It does not know the ChatGPT response format.
 

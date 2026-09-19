@@ -5,6 +5,7 @@
 mod oled_presenter;
 mod parse_ntp_response;
 mod remaining_percent;
+mod reset_countdown;
 mod synchronize_clock;
 
 use core::{fmt::Write as _, panic::PanicInfo};
@@ -138,8 +139,10 @@ async fn main(spawner: Spawner) -> ! {
         }
     }
     println!("usage-display: fetching time via NTP");
+    let mut clock = None;
     let result = match synchronize_clock::synchronize_clock(stack).await {
         Ok(unix_seconds) => {
+            clock = Some((unix_seconds, embassy_time::Instant::now()));
             println!(
                 "usage-display: NTP clock ready unix_seconds={}",
                 unix_seconds
@@ -156,6 +159,7 @@ async fn main(spawner: Spawner) -> ! {
         }
         Err(error) => Err(UsageRequestError::Clock(error)),
     };
+    let mut displayed_usage = None;
     match result {
         Ok(snapshot) => {
             println!(
@@ -169,9 +173,13 @@ async fn main(spawner: Spawner) -> ! {
                 snapshot.weekly_used_percent,
                 snapshot.weekly_window_seconds,
             );
+            displayed_usage = remaining.map(|value| (value, snapshot.weekly_reset_at));
             if let Some(display) = oled.as_mut() {
+                let now = clock
+                    .map(|(unix, instant)| unix + instant.elapsed().as_secs())
+                    .unwrap_or(0);
                 let result = match remaining {
-                    Some(value) => display.show_remaining(value),
+                    Some(value) => display.show_remaining(value, snapshot.weekly_reset_at, now),
                     None => display.show_status("No weekly data"),
                 };
                 match result {
@@ -194,7 +202,16 @@ async fn main(spawner: Spawner) -> ! {
     }
 
     loop {
-        Timer::after(Duration::from_secs(300)).await;
+        Timer::after(Duration::from_secs(60)).await;
+        if let (Some(display), Some((remaining, reset_at)), Some((unix, instant))) =
+            (oled.as_mut(), displayed_usage, clock)
+        {
+            if let Err(error) =
+                display.show_remaining(remaining, reset_at, unix + instant.elapsed().as_secs())
+            {
+                println!("usage-display: OLED write failed: {:?}", error);
+            }
+        }
     }
 }
 

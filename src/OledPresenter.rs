@@ -72,11 +72,27 @@ impl OledPresenter {
         self.display.flush()
     }
 
-    pub fn show_remaining(&mut self, remaining: u8) -> Result<(), DisplayError> {
+    pub fn show_remaining(
+        &mut self,
+        remaining: u8,
+        reset_at: Option<u64>,
+        now: u64,
+    ) -> Result<(), DisplayError> {
         self.display.clear_buffer();
-        let mut value = String::<4>::new();
-        // Every u8 followed by '%' fits the four-byte buffer.
-        let _ = write!(value, "{}%", remaining);
+        let mut value = String::<9>::new();
+        let _ = write!(value, "{}% left", remaining);
+        let mut reset = String::<40>::new();
+        match crate::reset_countdown::reset_countdown(reset_at, now) {
+            None => {
+                let _ = reset.push_str("Reset unknown");
+            }
+            Some((0, 0)) => {
+                let _ = reset.push_str("Reset due");
+            }
+            Some((days, hours)) => {
+                let _ = write!(reset, "Reset in {}d {}h", days, hours);
+            }
+        }
         let small = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
         let large = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
         let _ = Text::with_alignment(
@@ -88,7 +104,7 @@ impl OledPresenter {
         .draw(&mut self.display);
         let _ = Text::with_alignment(value.as_str(), Point::new(64, 38), large, Alignment::Center)
             .draw(&mut self.display);
-        let _ = Text::with_alignment("remaining", Point::new(64, 56), small, Alignment::Center)
+        let _ = Text::with_alignment(reset.as_str(), Point::new(64, 56), small, Alignment::Center)
             .draw(&mut self.display);
         self.display.flush()
     }
