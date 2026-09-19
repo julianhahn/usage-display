@@ -94,6 +94,23 @@ The minimal firmware flashed successfully to `/dev/ttyUSB0` with the project-loc
 - Three additional host tests cover remaining-percentage conversion: `rustc +stable --edition 2024 --test src/remaining_percent.rs -o /tmp/usage-display-percentage-tests && /tmp/usage-display-percentage-tests`.
 - The latest firmware is flashed, the display acknowledged all writes, and Julian confirmed the visible result works. A complete `UsageSnapshot`, five-minute refresh, and stale-value handling remain open.
 
+## Physical enclosure and power
+
+Plan: build a small wooden desktop enclosure for the Heltec board.
+
+- [x] Extract the main board measurements from the reference photos: about 75 mm long, 30 mm wide, and about 20 mm high including the pin headers. Re-measure the bare board before cutting wood.
+- [ ] Confirm the rear clip connector location and leave clearance for it. The connector is not visible in these front and side photos.
+- [ ] Leave openings for the USB-C port on the short left edge, the built-in PRG and RST buttons on the front, and the OLED.
+- [ ] Add a rechargeable battery and decide where its connector and charging path sit.
+- [ ] Add one accessible power button to turn the device on and off.
+- [ ] Reserve a second accessible button for later firmware control.
+- [ ] Make the enclosure slope upward toward the user. The display will sit on a table about one arm's length away, viewed from slightly above at chest height.
+- [ ] Start with an internal envelope of at least 80 × 35 × 25 mm. Add extra space for the battery, switch, second button, wiring, wood thickness, and the slanted mounting angle.
+- [ ] Prototype the wooden case with removable panels so the board and battery remain serviceable.
+- [ ] Check ventilation, cable access, button reach, and battery safety before the final build.
+
+The case should be a small angled box, not a flat board cover. The display faces the user; the USB-C port and board buttons remain reachable for setup and recovery.
+
 ## Fallback
 
 Only if direct board access fails:

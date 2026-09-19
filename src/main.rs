@@ -201,8 +201,44 @@ async fn main(spawner: Spawner) -> ! {
         }
     }
 
+    let mut refresh_elapsed_seconds = 0;
     loop {
         Timer::after(Duration::from_secs(60)).await;
+        refresh_elapsed_seconds += 60;
+
+        if refresh_elapsed_seconds >= 300 {
+            refresh_elapsed_seconds = 0;
+            println!("usage-display: refreshing usage");
+            match embassy_time::with_timeout(Duration::from_secs(30), fetch_usage(stack)).await {
+                Ok(Ok(snapshot)) => {
+                    let refreshed = remaining_percent::remaining_percent(
+                        snapshot.weekly_used_percent,
+                        snapshot.weekly_window_seconds,
+                    );
+                    if let Some(value) = refreshed {
+                        displayed_usage = Some((value, snapshot.weekly_reset_at));
+                        println!(
+                            "usage-display: usage refreshed remaining_percent={} weekly_reset_at={:?}",
+                            value, snapshot.weekly_reset_at
+                        );
+                    } else {
+                        println!(
+                            "usage-display: refresh returned no weekly data; keeping last value"
+                        );
+                    }
+                }
+                Ok(Err(error)) => {
+                    println!(
+                        "usage-display: usage refresh failed; keeping last value: {:?}",
+                        error
+                    );
+                }
+                Err(_) => {
+                    println!("usage-display: usage refresh timed out; keeping last value");
+                }
+            }
+        }
+
         if let (Some(display), Some((remaining, reset_at)), Some((unix, instant))) =
             (oled.as_mut(), displayed_usage, clock)
         {
